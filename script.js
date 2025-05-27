@@ -9,12 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('search-input');
     
     // Modal de Detalhes do Produto
-    const productDetailModal = document.getElementById('modal'); // Renomeado para clareza
+    const productDetailModal = document.getElementById('modal'); 
     const closeProductDetailModalBtn = document.getElementById('close-modal');
     const addToCartButton = document.getElementById('add-to-cart-button');
 
     // Carrinho
-    const cartIcon = document.getElementById('cart-icon');
+    const cartIcon = document.getElementById('animated-cart-icon'); // Usando o ID para animação
     const cartCountSpan = document.getElementById('cart-count');
     const cartModal = document.getElementById('cart-modal');
     const closeCartModalBtn = document.getElementById('close-cart-modal');
@@ -23,15 +23,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const emptyCartMessage = document.getElementById('empty-cart-message');
     const clearCartButton = document.getElementById('clear-cart-button');
 
+    // Notificações Toast
+    const toastContainer = document.getElementById('toast-container');
+
     let allProducts = [];
     let currentImageIndex = 0;
     let currentImages = [];
-    let currentProduct = null; // Para guardar o produto atualmente no modal
-    let cart = []; // Array para armazenar os itens do carrinho: { product: {}, quantity: N }
+    let currentProduct = null; 
+    let cart = []; 
 
     // --- FUNÇÕES GERAIS ---
 
-    // Função para buscar e processar os dados da planilha
     async function fetchProducts() {
         if (!googleSheetCsvUrl || googleSheetCsvUrl === 'COLE_O_LINK_DA_SUA_PLANILHA_PUBLICADA_COM O_CSV_AQUI') {
             loader.innerHTML = 'Erro: Configure o link da sua Planilha Google no código HTML.';
@@ -54,9 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Função para parsear o CSV (com melhorias para vírgulas em descrições)
     function parseCSV(text) {
-        const rows = text.split(/\r?\n/).slice(1); // Ignora cabeçalho
+        const rows = text.split(/\r?\n/).slice(1);
         return rows.map(row => {
             const values = [];
             let inQuote = false;
@@ -72,15 +73,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentField += char;
                 }
             }
-            values.push(currentField.trim()); // Adiciona o último campo
+            values.push(currentField.trim());
 
-            if (values.length < 5) return null; // Ignora linhas mal formatadas ou incompletas
+            if (values.length < 5) return null;
 
-            const priceString = values[2].replace(',', '.'); // Troca vírgula por ponto para parseFloat
+            const priceString = values[2].replace(',', '.');
             const stockString = values[3];
 
             return {
-                // Adicione um ID único para cada produto, útil para o carrinho
                 id: `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, 
                 name: values[0],
                 description: values[1],
@@ -88,12 +88,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 stock: parseInt(stockString, 10),
                 images: values[4].split(',').map(url => url.trim()).filter(url => url)
             };
-        }).filter(Boolean); // Remove linhas nulas
+        }).filter(Boolean);
     }
     
-    // Função para exibir os produtos na grade
     function displayProducts(products) {
-        productGrid.innerHTML = ''; // Limpa a grade antes de adicionar novos itens
+        productGrid.innerHTML = ''; 
         if (products.length === 0) {
             productGrid.innerHTML = '<p>Nenhum produto encontrado.</p>';
             return;
@@ -121,7 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Função para definir status do estoque
     function getStockStatus(stock) {
         if (isNaN(stock) || stock === 0) {
             return { text: 'Esgotado', className: 'out' };
@@ -134,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- LÓGICA DO MODAL DE DETALHES DO PRODUTO ---
     function showProductModal(product) {
-        currentProduct = product; // Salva o produto atual
+        currentProduct = product; 
         currentImages = product.images;
         currentImageIndex = 0;
         
@@ -148,15 +146,14 @@ document.addEventListener('DOMContentLoaded', () => {
         modalStock.textContent = stockStatus.text;
         modalStock.className = `stock ${stockStatus.className}`;
 
-        // Desabilita/habilita botão "Adicionar ao Carrinho" se esgotado
         if (product.stock === 0 || isNaN(product.stock)) {
             addToCartButton.textContent = 'Produto Esgotado';
             addToCartButton.disabled = true;
-            addToCartButton.style.backgroundColor = '#ccc'; // Cor cinza para desabilitado
+            addToCartButton.style.backgroundColor = '#ccc';
         } else {
             addToCartButton.textContent = 'Adicionar ao Carrinho';
             addToCartButton.disabled = false;
-            addToCartButton.style.backgroundColor = ''; // Remove cor se já não for padrão
+            addToCartButton.style.backgroundColor = '';
         }
 
         updateSlider();
@@ -165,7 +162,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function updateSlider() {
         const slider = document.getElementById('modal-image-slider');
-        // Remove imagens existentes (mantém botões de navegação)
         Array.from(slider.children).forEach(child => {
             if (child.tagName === 'IMG') {
                 child.remove();
@@ -188,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.slider-btn.next').style.display = hasMultipleImages ? 'block' : 'none';
     }
     
-    // Torna changeSlide global para ser acessível via onclick no HTML
     window.changeSlide = function(direction) {
         const newIndex = currentImageIndex + direction;
         if (newIndex >= 0 && newIndex < currentImages.length) {
@@ -209,23 +204,20 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- LÓGICA DO CARRINHO ---
 
-    // Adicionar produto ao carrinho
     addToCartButton.addEventListener('click', () => {
         if (currentProduct && currentProduct.stock > 0) {
             addItemToCart(currentProduct);
-            productDetailModal.style.display = 'none'; // Fecha o modal de detalhes
+            productDetailModal.style.display = 'none'; 
         } else {
-            alert('Produto esgotado ou inválido.');
+            showToast('Produto esgotado ou inválido!', 'error'); // Notificação de erro
         }
     });
 
-    // Abrir modal do carrinho
     cartIcon.addEventListener('click', () => {
-        renderCart(); // Renderiza o carrinho antes de abrir
+        renderCart(); 
         cartModal.style.display = 'flex';
     });
 
-    // Fechar modal do carrinho
     closeCartModalBtn.addEventListener('click', () => {
         cartModal.style.display = 'none';
     });
@@ -236,62 +228,61 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Limpar carrinho
     clearCartButton.addEventListener('click', () => {
         if (confirm('Tem certeza que deseja limpar o carrinho?')) {
             cart = [];
             updateCartCount();
             renderCart();
+            showToast('Carrinho limpo!', 'success'); // Notificação de sucesso
         }
     });
 
-    // Adicionar item ao array do carrinho
     function addItemToCart(productToAdd) {
         const existingItem = cart.find(item => item.product.id === productToAdd.id);
 
         if (existingItem) {
-            // Verifica se há estoque disponível
             if (existingItem.quantity < productToAdd.stock) {
                 existingItem.quantity++;
+                showToast(`${productToAdd.name} +1 no carrinho!`, 'success');
             } else {
-                alert(`Não há mais estoque de ${productToAdd.name} disponível.`);
+                showToast(`Não há mais estoque de ${productToAdd.name}.`, 'error');
                 return;
             }
         } else {
             cart.push({ product: productToAdd, quantity: 1 });
+            showToast(`${productToAdd.name} adicionado ao carrinho!`, 'success');
         }
         updateCartCount();
-        renderCart(); // Opcional: renderizar o carrinho imediatamente após adicionar
-        alert(`${productToAdd.name} adicionado ao carrinho!`);
+        renderCart();
+        animateCartIcon(); // Chama a animação do ícone
     }
 
-    // Remover item do carrinho
     function removeItemFromCart(productId) {
         cart = cart.filter(item => item.product.id !== productId);
         updateCartCount();
         renderCart();
     }
 
-    // Atualizar quantidade de item no carrinho
     function updateItemQuantity(productId, change) {
         const item = cart.find(item => item.product.id === productId);
         if (item) {
             const newQuantity = item.quantity + change;
             if (newQuantity > 0 && newQuantity <= item.product.stock) {
                 item.quantity = newQuantity;
+                showToast(`Quantidade de ${item.product.name} atualizada para ${newQuantity}.`, 'success');
             } else if (newQuantity <= 0) {
-                removeItemFromCart(productId); // Remove se a quantidade for 0 ou menos
+                removeItemFromCart(productId); 
+                showToast(`${item.product.name} removido do carrinho.`, 'success');
             } else if (newQuantity > item.product.stock) {
-                alert(`Você atingiu o limite de estoque para ${item.product.name}.`);
+                showToast(`Você atingiu o limite de estoque para ${item.product.name}.`, 'error');
             }
         }
         updateCartCount();
         renderCart();
     }
 
-    // Renderizar os itens no modal do carrinho
     function renderCart() {
-        cartItemsContainer.innerHTML = ''; // Limpa itens existentes
+        cartItemsContainer.innerHTML = ''; 
         let total = 0;
 
         if (cart.length === 0) {
@@ -327,7 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         cartTotalSpan.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
         
-        // Adiciona event listeners aos novos botões de quantidade
         document.querySelectorAll('.decrease-quantity').forEach(button => {
             button.addEventListener('click', (e) => {
                 const productId = e.target.dataset.id;
@@ -343,10 +333,39 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Atualizar o contador no ícone do carrinho
     function updateCartCount() {
         const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
         cartCountSpan.textContent = totalItems;
+    }
+
+    // --- FUNÇÕES DE ANIMAÇÃO E TOAST ---
+
+    // Animação de pulso no ícone do carrinho
+    function animateCartIcon() {
+        cartIcon.classList.add('pulse');
+        // Remove a classe após a animação para que possa ser disparada novamente
+        setTimeout(() => {
+            cartIcon.classList.remove('pulse');
+        }, 500); // Duração da animação em CSS
+    }
+
+    // Exibir notificação Toast
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.classList.add('toast');
+        if (type === 'error') {
+            toast.classList.add('error');
+            toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span>${message}</span>`;
+        } else {
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> <span>${message}</span>`;
+        }
+        
+        toastContainer.appendChild(toast);
+
+        // Remove o toast após a animação
+        setTimeout(() => {
+            toast.remove();
+        }, 3000); // 3 segundos (corresponde à duração da animação fadeInOut em CSS)
     }
 
     // --- LÓGICA DA BUSCA ---
@@ -361,5 +380,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- INICIALIZAÇÃO ---
     fetchProducts();
-    updateCartCount(); // Atualiza a contagem do carrinho ao carregar a página
+    updateCartCount(); 
 });

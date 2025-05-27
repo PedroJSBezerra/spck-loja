@@ -12,6 +12,8 @@
     --button-green: #28a745;
     --button-red: #dc3545;
     --button-hover: #0056b3;
+    --toast-background: #333;
+    --toast-text: #fff;
 }
 
 body {
@@ -56,9 +58,20 @@ header h1 {
     margin-left: 15px;
 }
 
-#cart-icon {
+#animated-cart-icon { /* ID específico para animação */
     font-size: 1.8em;
     color: var(--primary-blue);
+    transition: transform 0.2s ease-in-out; /* Adiciona transição para a animação */
+}
+
+#animated-cart-icon.pulse { /* Classe para a animação de pulso */
+    animation: pulse-cart 0.5s ease-out;
+}
+
+@keyframes pulse-cart {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15) rotate(10deg); } /* Sutilmente maior e inclinado */
+    100% { transform: scale(1); }
 }
 
 #cart-count {
@@ -422,4 +435,46 @@ main {
 
 .clear-cart-btn:hover {
     background-color: #c82333;
+}
+
+/* --- Notificação Toast (Novo) --- */
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1001; /* Acima de outros elementos */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background-color: var(--toast-background);
+    color: var(--toast-text);
+    padding: 12px 20px;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    opacity: 0; /* Começa invisível */
+    transform: translateY(20px); /* Começa um pouco abaixo */
+    animation: fadeInOut 3s forwards; /* Animação completa */
+    min-width: 250px;
+    max-width: 350px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toast.error {
+    background-color: var(--red-stock);
+}
+
+.toast i {
+    font-size: 1.2em;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(20px); }
+    10% { opacity: 1; transform: translateY(0); }
+    90% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(20px); }
 }
