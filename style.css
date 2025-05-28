@@ -1,4 +1,10 @@
 /* Variáveis CSS */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 :root, body:not(.dark-mode) { /* Modo Claro Padrão */
     --primary-blue: #1877F2;
     --background-gray: #f0f2f5;
@@ -45,7 +51,9 @@ body.dark-mode {
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
-    padding-top: 56px; /* Para compensar o header fixo/sticky */
+    width: 100%; /* Com box-sizing: border-box, o padding é acomodado internamente */
+
+    /* padding-top: 56px; /* Para compensar o header fixo/sticky */
     background-color: var(--background-gray);
     color: var(--text-primary);
     transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
@@ -121,68 +129,23 @@ header h1 {
     text-align: center;
 }
 
-/* --- Estilos do Menu Hambúrguer (Sidebar) --- */
-.menu-icon {
+/* --- Estilos do Ícone de Configurações --- */
+.settings-icon {
+    /* Reutilizando estilos do antigo menu-icon, ajuste se necessário */
     font-size: 1.8em;
     color: var(--text-primary);
     cursor: pointer;
     margin-right: 15px;
 }
 
-.sidebar {
-    height: 100%;
-    width: 0; /* Largura inicial zero, escondida */
-    position: fixed;
-    z-index: 1002; /* Acima de tudo, exceto talvez um toast */
-    top: 0;
-    left: 0;
-    background-color: var(--card-background);
-    overflow-x: hidden;
-    transition: width var(--transition-speed) ease, background-color var(--transition-speed) ease;
-    padding-top: 60px; /* Para não cobrir o header */
-    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-}
-
-.sidebar.open {
-    width: 250px; /* Largura aberta */
-}
-
-.sidebar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px;
-    border-bottom: 1px solid var(--border-color);
-    position: absolute;
-    background-color: var(--card-background); /* Garante que o header da sidebar tenha fundo */
-    top: 0;
-    width: calc(100% - 30px); /* Ajuste para padding */
-}
-
-.sidebar-header h3 {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: 1.3em;
-}
-
-.close-sidebar-btn {
-    background: none;
-    border: none;
-    font-size: 2em;
-    cursor: pointer;
-    color: var(--text-secondary);
-}
-
-.close-sidebar-btn:hover {
-    color: var(--text-primary);
-}
-
-.sidebar-section {
+/* Estilos para seções dentro do modal de configurações */
+.settings-section {
     padding: 20px 15px;
     border-bottom: 1px solid var(--border-color);
+    /* Ajuste o padding se necessário para o modal */
 }
 
-.sidebar-section:last-child {
+.settings-section:last-child {
     border-bottom: none;
 }
 
@@ -190,6 +153,12 @@ header h1 {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+/* Container para os botões de grade/lista dentro do modal */
+.display-options-modal {
+    display: flex;
+    gap: 10px; /* Espaçamento entre os botões Grade e Lista */
 }
 
 .display-option-btn {
@@ -204,6 +173,7 @@ header h1 {
     align-items: center;
     gap: 10px;
     transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    flex-grow: 1; /* Para que os botões ocupem espaço igual se necessário */
 }
 
 .display-option-btn:hover {
@@ -217,8 +187,8 @@ header h1 {
     border-color: var(--primary-blue);
 }
 
-/* --- Estilos para o Toggle Switch (Dark Mode) --- */
-.sidebar-section h4 {
+/* Estilo para o título da seção no modal (h4) */
+.settings-section h4 {
     margin-top: 0;
     margin-bottom: 10px;
     font-size: 0.9em;
@@ -226,6 +196,7 @@ header h1 {
     text-transform: uppercase;
 }
 
+/* --- Estilos para o Toggle Switch (Dark Mode) - Mantidos como estão --- */
 .switch-container {
     display: flex;
     align-items: center;
@@ -234,53 +205,72 @@ header h1 {
 
 .switch {
     position: relative;
-    display: inline-block;
-    width: 44px; /* Largura do switch */
-    height: 24px; /* Altura do switch */
+    display: inline-block; /* Mantém o comportamento de bloco em linha */
+    width: 50px;  /* Largura ajustada para os ícones */
+    height: 26px; /* Altura ajustada */
+    background-color: #87CEEB; /* Azul céu para modo claro (dia) */
+    border-radius: 25px; /* Totalmente arredondado */
+    cursor: pointer;
+    transition: background-color var(--transition-speed) ease;
+    overflow: hidden; /* Essencial para o efeito de deslizar dos ícones */
 }
 
-.switch input {
+.switch input { /* Mantém para esconder o checkbox real */
     opacity: 0;
     width: 0;
     height: 0;
 }
 
-.slider {
+/* Estilos para os ícones de sol e lua */
+.switch .fas {
     position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc; /* Cor de fundo do slider (off) */
-    transition: .4s;
-    border-radius: 24px; /* Borda arredondada */
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 15px; /* Tamanho do ícone */
+    transition: transform var(--transition-speed) ease, opacity var(--transition-speed) ease;
 }
 
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 20px; /* Altura do "thumb" */
-    width: 20px; /* Largura do "thumb" */
-    left: 2px; /* Posição inicial do "thumb" */
-    bottom: 2px; /* Posição inicial do "thumb" */
-    background-color: white; /* Cor do "thumb" */
-    transition: .4s;
-    border-radius: 50%; /* Torna o "thumb" redondo */
+.switch .fa-sun {
+    left: 5px; /* Posição do sol à esquerda */
+    color: #f1c40f; /* Cor amarela para o sol */
+    opacity: 1; /* Visível no modo claro */
+    transform: translateY(-50%) translateX(0%);
 }
 
-input:checked + .slider { background-color: var(--primary-blue); }
-input:checked + .slider:before { transform: translateX(20px); }
+.switch .fa-moon {
+    right: 5px; /* Posição da lua à direita */
+    color: #f0e68c; /* Cor amarelo pálido para a lua */
+    opacity: 0; /* Invisível no modo claro */
+    transform: translateY(-50%) translateX(100%); /* Começa fora da tela à direita */
+}
+
+/* Quando o input está checado (modo escuro ativo) */
+body.dark-mode .switch { /* Muda o fundo do switch no modo escuro */
+    background-color: #483D8B; /* Azul ardósia escuro para noite */
+}
+
+.switch input:checked ~ .fa-sun {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-120%); /* Sol desliza para fora à esquerda */
+}
+
+.switch input:checked ~ .fa-moon {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0%); /* Lua desliza para a posição visível */
+}
 
 /* --- Estilos do Conteúdo Principal --- */
 main {
     padding: 8px;
+    padding-top: calc(56px + 8px); /* Altura do header (56px) + padding original superior (8px) */
+
     transition: margin-left var(--transition-speed) ease; /* Transição para empurrar o conteúdo */
+    /* A lógica de margin-left para sidebar não é mais necessária */
 }
 
-body.sidebar-open main {
-    margin-left: 250px; /* Empurra o conteúdo quando a sidebar está aberta */
-}
+/* body.sidebar-open main { */
+    /* margin-left: 250px; /* Empurra o conteúdo quando a sidebar está aberta - REMOVIDO */
+/* } */
 
 /* --- Estilos do Container de Produtos (Grade e Lista) --- */
 .product-container {
@@ -459,6 +449,12 @@ body.sidebar-open main {
     transition: color var(--transition-speed) ease, border-color var(--transition-speed) ease;
     padding-bottom: 10px;
 }
+
+/* Ajuste para o modal de configurações, se necessário */
+#settings-modal .modal-content {
+    max-width: 400px; /* Ou o tamanho que preferir para este modal */
+}
+
 
 .close-button {
     color: var(--text-secondary);
@@ -742,13 +738,6 @@ body.sidebar-open main {
     10% { opacity: 1; transform: translateY(0); }
     90% { opacity: 1; transform: translateY(0); }
     100% { opacity: 0; transform: translateY(20px); }
-}
-
-/* Estilos do Loader (se você tiver um) */
-#loader {
-    /* Estilos para o seu loader aqui */
-    /* Exemplo: */
-    /* position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); */
 }
 
 /* Estilos de Scrollbar (Opcional, para consistência visual) */

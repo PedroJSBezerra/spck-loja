@@ -27,13 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const cartTotalSpan = document.getElementById('cart-total');
     const clearCartButton = document.getElementById('clear-cart-button');
 
-    // Sidebar e Opções de Exibição
-    const menuIcon = document.getElementById('menu-icon');
-    const sidebar = document.getElementById('sidebar');
-    const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+    // Ícone de Configurações e Modal de Configurações
+    const settingsIcon = document.getElementById('settings-icon');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeSettingsModalBtn = document.getElementById('close-settings-modal');
+
+    // Opções de Exibição (dentro do modal de configurações)
     const displayGridButton = document.getElementById('display-grid-button');
     const displayListButton = document.getElementById('display-list-button');
-    const darkModeToggle = document.getElementById('dark-mode-toggle'); // Seletor para o toggle
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
 
     // --- Estado da Aplicação ---
     let allProducts = [];
@@ -385,20 +387,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Funções da Sidebar / Opções de Visualização ---
+    // --- Funções do Modal de Configurações ---
 
-    function openSidebar() {
-        if (!sidebar) return;
-        sidebar.classList.add('open');
-        document.body.classList.add('sidebar-open');
+    function openSettingsModal() {
+        if (!settingsModal) return;
+        settingsModal.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Evita rolagem da página
     }
 
-    function closeSidebar() {
-        if (!sidebar) return;
-        sidebar.classList.remove('open');
-        document.body.classList.remove('sidebar-open');
+    function closeSettingsModal() {
+        if (!settingsModal) return;
+        settingsModal.classList.remove('active');
+        document.body.style.overflow = ''; // Restaura a rolagem da página
     }
 
+
+    // --- Funções de Opções de Visualização (Grade/Lista) ---
+
+    /**
+     * Define o modo de visualização (grade ou lista) e atualiza a interface.
+     * @param {string} mode - 'grid' ou 'list'.
+     */
     function setViewMode(mode) {
         if (!productGrid || !displayGridButton || !displayListButton) return;
         currentViewMode = mode;
@@ -570,29 +579,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (clearCartButton) clearCartButton.addEventListener('click', clearCart);
 
-    if (menuIcon) menuIcon.addEventListener('click', openSidebar);
-    if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
+    // Event Listeners para o Modal de Configurações
+    if (settingsIcon) settingsIcon.addEventListener('click', openSettingsModal);
+    if (closeSettingsModalBtn) closeSettingsModalBtn.addEventListener('click', closeSettingsModal);
+    if (settingsModal) {
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) closeSettingsModal();
+        });
+    }
 
+    // Fechar modal de configurações ao clicar fora (se a sidebar foi removida)
     document.addEventListener('click', (e) => {
-        if (sidebar && sidebar.classList.contains('open') &&
-            !sidebar.contains(e.target) &&
-            e.target !== menuIcon &&
-            (!menuIcon || !menuIcon.contains(e.target))
+        // Este listener pode ser removido se o clique no overlay do modal já o fecha.
+        // Se mantido, ajuste para o settingsModal e settingsIcon.
+        if (settingsModal && settingsModal.classList.contains('active') &&
+            !settingsModal.querySelector('.modal-content').contains(e.target) && // Verifica se o clique não foi dentro do conteúdo do modal
+            e.target !== settingsIcon &&
+            (!settingsIcon || !settingsIcon.contains(e.target))
         ) {
-            closeSidebar();
+            // closeSettingsModal(); // Descomente se o clique no overlay não estiver funcionando como esperado
         }
     });
 
     if (displayGridButton) {
         displayGridButton.addEventListener('click', () => {
             setViewMode('grid');
-            closeSidebar();
+            closeSettingsModal(); // Fecha o modal de configurações após a seleção
         });
     }
     if (displayListButton) {
         displayListButton.addEventListener('click', () => {
             setViewMode('list');
-            closeSidebar();
+            closeSettingsModal(); // Fecha o modal de configurações após a seleção
         });
     }
 
@@ -601,6 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const newTheme = event.target.checked ? 'dark' : 'light';
             applyTheme(newTheme);
             localStorage.setItem('theme', newTheme);
+            // closeSettingsModal(); // Opcional: fechar modal ao trocar tema, pode ser um pouco abrupto.
         });
     }
 

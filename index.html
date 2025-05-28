@@ -9,8 +9,9 @@
 </head>
 <body>
     <header>
-        <div class="menu-icon" id="menu-icon">
-            <i class="fas fa-bars"></i>
+        <!-- Ícone de engrenagem para abrir o modal de configurações -->
+        <div class="settings-icon" id="settings-icon">
+            <i class="fas fa-cog"></i>
         </div>
         <input type="text" placeholder="Buscar no catálogo..." id="search-input">
         <div class="cart-icon-container">
@@ -18,28 +19,6 @@
             <span id="cart-count">0</span>
         </div>
     </header>
-
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h3>Opções de Exibição</h3>
-            <button class="close-sidebar-btn" id="close-sidebar-btn">&times;</button>
-        </div>
-        <div class="display-options">
-            <button id="display-grid-button" class="display-option-btn active">
-                <i class="fas fa-th"></i> Grade
-            </button>
-            <button id="display-list-button" class="display-option-btn">
-                <i class="fas fa-list"></i> Lista
-            </button>
-        </div>
-        <div class="sidebar-section"> <!-- Nova seção para o dark mode -->
-            <h4>Modo Escuro</h4>
-            <label class="switch">
-                <input type="checkbox" id="dark-mode-toggle">
-                <span class="slider round"></span>
-            </label>
-        </div>
-    </aside>
 
     <main>
         <div id="product-grid" class="product-container grid-view">
@@ -76,6 +55,33 @@
             <div id="cart-summary">
                 <h3>Total: <span id="cart-total">R$ 0,00</span></h3>
                 <button id="clear-cart-button" class="clear-cart-btn">Limpar Carrinho</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Configurações -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-settings-modal">&times;</span>
+            <h2>Configurações</h2>
+            <div class="settings-section">
+                <h4>Modo de Exibição</h4>
+                <div class="display-options-modal">
+                    <button id="display-grid-button" class="display-option-btn active">
+                        <i class="fas fa-th"></i> Grade
+                    </button>
+                    <button id="display-list-button" class="display-option-btn">
+                        <i class="fas fa-list"></i> Lista
+                    </button>
+                </div>
+            </div>
+            <div class="settings-section">
+                <h4>Tema</h4>
+                <label class="switch">
+                    <input type="checkbox" id="dark-mode-toggle">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </label>
             </div>
         </div>
     </div>
