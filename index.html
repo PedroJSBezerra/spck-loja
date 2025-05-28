@@ -2,34 +2,53 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Catálogo de Eletrônicos</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-
     <header>
+        <div class="menu-icon" id="menu-icon">
+            <i class="fas fa-bars"></i>
+        </div>
         <h1>Eletrônicos</h1>
-        <input type="text" id="search-input" placeholder="Buscar no catálogo...">
+        <input type="text" placeholder="Buscar no catálogo..." id="search-input">
         <div class="cart-icon-container">
-            <i class="fas fa-shopping-cart" id="animated-cart-icon"></i> 
+            <i class="fas fa-shopping-cart" id="animated-cart-icon"></i>
             <span id="cart-count">0</span>
         </div>
     </header>
 
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Opções de Exibição</h3>
+            <button class="close-sidebar-btn" id="close-sidebar-btn">&times;</button>
+        </div>
+        <div class="display-options">
+            <button id="display-grid-button" class="display-option-btn active">
+                <i class="fas fa-th"></i> Grade
+            </button>
+            <button id="display-list-button" class="display-option-btn">
+                <i class="fas fa-list"></i> Lista
+            </button>
+        </div>
+    </aside>
+
     <main>
-        <div id="product-grid">
+        <div id="product-grid" class="product-container grid-view">
             <div id="loader">Carregando produtos...</div>
         </div>
     </main>
-    
-    <div id="modal">
-        <div id="modal-content">
-            <span id="close-modal">&times;</span>
+
+    <div id="product-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-product-modal">&times;</span>
             <div id="modal-image-slider">
-                <button class="slider-btn prev" onclick="changeSlide(-1)">&#10094;</button>
-                <button class="slider-btn next" onclick="changeSlide(1)">&#10095;</button>
+                <button class="slider-btn prev" id="modal-prev-btn">&#10094;</button>
+                <div class="slider-images" id="slider-images">
+                    </div>
+                <button class="slider-btn next" id="modal-next-btn">&#10095;</button>
             </div>
             <div id="modal-details">
                 <div id="modal-price"></div>
@@ -47,7 +66,7 @@
             <h2>Seu Carrinho</h2>
             <div id="cart-items">
                 <p id="empty-cart-message">Seu carrinho está vazio.</p>
-            </div>
+                </div>
             <div id="cart-summary">
                 <h3>Total: <span id="cart-total">R$ 0,00</span></h3>
                 <button id="clear-cart-button" class="clear-cart-btn">Limpar Carrinho</button>
@@ -55,9 +74,8 @@
         </div>
     </div>
 
-    <div id="toast-container"></div> 
+    <div id="toast-container"></div>
 
     <script src="script.js"></script>
-
 </body>
 </html>
