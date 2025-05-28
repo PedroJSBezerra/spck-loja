@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalImageSlider = document.getElementById('modal-image-slider');
     const sliderImagesContainer = document.getElementById('slider-images');
     const modalPrevBtn = document.getElementById('modal-prev-btn');
+    const modalImageIndicators = document.getElementById('modal-image-indicators');
     const modalNextBtn = document.getElementById('modal-next-btn');
     const modalPrice = document.getElementById('modal-price');
     const modalName = document.getElementById('modal-name');
@@ -43,6 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedProduct = null;
     let currentImageIndex = 0; // Para o slider de imagens do modal
     let currentViewMode = 'grid'; // 'grid' ou 'list'
+    // Variáveis para controle do swipe no modal
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const swipeThreshold = 50; // Mínimo de pixels para considerar um swipe
 
     // --- Funções de Ajuda ---
 
@@ -264,40 +269,57 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {Object} product - O produto a ser exibido.
      */
     function openProductModal(product) {
-        if (!productModal || !modalPrice || !modalName || !modalStock || !modalDescription || !addToCartButton || !sliderImagesContainer) return;
+        if (!productModal || !modalPrice || !modalName || !modalStock || !modalDescription || !addToCartButton || !sliderImagesContainer || !modalImageIndicators) return;
         selectedProduct = product;
         currentImageIndex = 0; // Reseta o slide ao abrir o modal
-
+    
         modalPrice.textContent = `R$ ${selectedProduct.price ? selectedProduct.price.toFixed(2).replace('.', ',') : 'N/A'}`;
         modalName.textContent = selectedProduct.name || 'Produto sem nome';
         const stockStatus = getStockStatus(selectedProduct.stock);
         modalStock.className = ''; // Limpa classes anteriores
         modalStock.classList.add('stock', stockStatus.className);
         modalStock.textContent = stockStatus.text;
-        modalDescription.textContent = selectedProduct.description || 'Sem descrição.';
-
+        modalDescription.innerHTML = selectedProduct.description ? selectedProduct.description.replace(/\n/g, '<br>') : 'Sem descrição.';
+    
         addToCartButton.disabled = selectedProduct.stock === 0 || isNaN(selectedProduct.stock);
         addToCartButton.textContent = addToCartButton.disabled ? 'Produto Esgotado' : 'Adicionar ao Carrinho';
-
+    
         // Renderiza as imagens do slider
         sliderImagesContainer.innerHTML = '';
-        if (selectedProduct.images && selectedProduct.images.length > 0) {
-            selectedProduct.images.forEach((imgUrl, index) => {
-                const img = document.createElement('img');
-                img.src = imgUrl;
-                img.alt = `${selectedProduct.name} - Imagem ${index + 1}`;
-                sliderImagesContainer.appendChild(img);
-            });
-        } else {
+        modalImageIndicators.innerHTML = ''; // Limpa indicadores existentes
+    
+        const imagesToDisplay = selectedProduct.images && selectedProduct.images.length > 0 
+            ? selectedProduct.images 
+            : ['https://via.placeholder.com/400/cccccc/ffffff?text=Sem+Imagem'];
+    
+        imagesToDisplay.forEach((imgUrl, index) => {
             const img = document.createElement('img');
-            img.src = 'https://via.placeholder.com/400/cccccc/ffffff?text=Sem+Imagem';
-            img.alt = 'Sem imagem disponível';
+            img.src = imgUrl;
+            img.alt = `${selectedProduct.name || 'Produto'} - Imagem ${index + 1}`;
             sliderImagesContainer.appendChild(img);
-        }
+    
+            if (imagesToDisplay.length > 1) {
+                const dot = document.createElement('span');
+                dot.classList.add('indicator-dot');
+                dot.dataset.index = index;
+                dot.setAttribute('aria-label', `Ir para imagem ${index + 1}`);
+                dot.addEventListener('click', () => {
+                    currentImageIndex = index;
+                    updateModalSlider();
+                });
+                modalImageIndicators.appendChild(dot);
+            }
+        });
+        
         updateModalSlider();
-
+    
         productModal.classList.add('active');
         document.body.style.overflow = 'hidden'; // Evita rolagem da página
+
+        // Adiciona listeners de toque para swipe no slider do modal
+        sliderImagesContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
+        sliderImagesContainer.addEventListener('touchmove', handleTouchMove, { passive: true });
+        sliderImagesContainer.addEventListener('touchend', handleTouchEnd);
     }
 
     /**
@@ -308,29 +330,44 @@ document.addEventListener('DOMContentLoaded', () => {
         productModal.classList.remove('active');
         document.body.style.overflow = ''; // Restaura a rolagem da página
         selectedProduct = null;
+
+        // Remove listeners de toque ao fechar o modal
+        sliderImagesContainer.removeEventListener('touchstart', handleTouchStart);
+        sliderImagesContainer.removeEventListener('touchmove', handleTouchMove);
+        sliderImagesContainer.removeEventListener('touchend', handleTouchEnd);
     }
 
     /**
      * Atualiza a exibição do slider de imagens no modal.
      */
     function updateModalSlider() {
-        if (!sliderImagesContainer || !modalPrevBtn || !modalNextBtn) return;
+        if (!sliderImagesContainer || !modalPrevBtn || !modalNextBtn || !modalImageIndicators || !selectedProduct) return;
+        
+        const images = selectedProduct.images && selectedProduct.images.length > 0 ? selectedProduct.images : [];
+        const totalImages = images.length || 1; // Considera placeholder se não houver imagens
+
         const offset = -currentImageIndex * 100;
         sliderImagesContainer.style.transform = `translateX(${offset}%)`;
-
+    
         modalPrevBtn.disabled = currentImageIndex === 0;
-        modalNextBtn.disabled = !selectedProduct || !selectedProduct.images || currentImageIndex === selectedProduct.images.length - 1;
-
+        modalNextBtn.disabled = currentImageIndex === totalImages - 1;
+    
         // Esconde botões se houver apenas 1 imagem ou nenhuma
-        if (!selectedProduct || !selectedProduct.images || selectedProduct.images.length <= 1) {
+        if (totalImages <= 1) {
             modalPrevBtn.style.display = 'none';
             modalNextBtn.style.display = 'none';
+            modalImageIndicators.style.display = 'none';
         } else {
             modalPrevBtn.style.display = 'block';
             modalNextBtn.style.display = 'block';
+            modalImageIndicators.style.display = 'flex';
         }
+    
+        const dots = modalImageIndicators.querySelectorAll('.indicator-dot');
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === currentImageIndex);
+        });
     }
-
     /**
      * Abre o modal do carrinho.
      */
@@ -350,6 +387,43 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = '';
     }
 
+    // --- Funções de Swipe para o Carrossel do Modal ---
+
+    function handleTouchStart(event) { // event já era passado implicitamente
+        touchStartX = event.changedTouches[0].screenX;
+    }
+
+    function handleTouchMove(event) { // event já era passado implicitamente
+        touchEndX = event.changedTouches[0].screenX;
+    }
+
+    function handleTouchEnd(event) { // Adicionado o parâmetro 'event'
+        if (!selectedProduct || !selectedProduct.images || selectedProduct.images.length <= 1) {
+            touchStartX = 0; // Garante reset mesmo se não houver ação
+            touchEndX = 0;   // Garante reset mesmo se não houver ação
+            return; // Não faz nada se não houver imagens suficientes para swipe
+        }
+
+        const finalTouchEndX = event.changedTouches[0].screenX; // Usa a coordenada do evento touchend
+        const totalImages = (selectedProduct.images && selectedProduct.images.length > 0 ? selectedProduct.images.length : 1);
+
+        if (finalTouchEndX < touchStartX - swipeThreshold) { // Usa finalTouchEndX
+            // Swipe para a esquerda (próxima imagem)
+            if (currentImageIndex < totalImages - 1) {
+                currentImageIndex++;
+                updateModalSlider();
+            }
+        } else if (finalTouchEndX > touchStartX + swipeThreshold) { // Usa finalTouchEndX
+            // Swipe para a direita (imagem anterior)
+            if (currentImageIndex > 0) {
+                currentImageIndex--;
+                updateModalSlider();
+            }
+        }
+        // Reseta as posições para o próximo toque
+        touchStartX = 0;
+        touchEndX = 0; // Reseta a variável de escopo da classe, embora finalTouchEndX seja prioritária aqui.
+    }
     // --- Funções de Persistência (LocalStorage) ---
 
     function saveCartToLocalStorage() {
@@ -545,7 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (modalPrevBtn) {
         modalPrevBtn.addEventListener('click', () => {
-            if (selectedProduct && selectedProduct.images && currentImageIndex > 0) {
+            if (currentImageIndex > 0) {
                 currentImageIndex--;
                 updateModalSlider();
             }
@@ -553,9 +627,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (modalNextBtn) {
         modalNextBtn.addEventListener('click', () => {
-            if (selectedProduct && selectedProduct.images && currentImageIndex < selectedProduct.images.length - 1) {
-                currentImageIndex++;
-                updateModalSlider();
+            const images = selectedProduct && selectedProduct.images && selectedProduct.images.length > 0 ? selectedProduct.images : [];
+            const totalImages = images.length || 1;
+            if (currentImageIndex < totalImages - 1) {
+                 currentImageIndex++;
+                 updateModalSlider();
             }
         });
     }

@@ -534,6 +534,29 @@ main {
 .slider-btn.next { right: 10px; }
 .slider-btn:disabled { opacity: 0.3; cursor: default; }
 
+.slider-indicators {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+}
+
+.indicator-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--border-color);
+    cursor: pointer;
+    transition: background-color var(--transition-speed) ease;
+}
+
+.indicator-dot.active {
+    background-color: var(--primary-blue);
+}
+
 #modal-details {
     padding: 20px;
 }
